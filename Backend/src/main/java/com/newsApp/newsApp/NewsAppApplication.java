@@ -1,13 +1,13 @@
-package com.newsApp.newApp;
+package com.newsApp.newsApp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class NewAppApplication {
+public class NewsAppApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(NewAppApplication.class, args);
+		SpringApplication.run(NewsAppApplication.class, args);
 	}
 
 }
