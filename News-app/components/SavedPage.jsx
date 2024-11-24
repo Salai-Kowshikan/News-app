@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 
-const WeatherPage = () => {
+const SavedPage = () => {
   return (
     <View>
       <Text>Weather Page Content Coming Soon!</Text>
@@ -9,4 +9,4 @@ const WeatherPage = () => {
   );
 };
 
-export default WeatherPage;
+export default SavedPage;

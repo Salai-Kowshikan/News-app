@@ -1,31 +1,31 @@
-import * as React from "react";
-import { BottomNavigation, Text } from "react-native-paper";
-import NewsPage from "@/components/NewsPage";
-import WeatherPage from "@/components/WeatherPage";
-const newsRoute = () => <NewsPage />;
-const weatherRoute = () => <WeatherPage />;
+import { useState } from "react";
+import { BottomNavigation } from "react-native-paper";
+import FeedPage from "@/components/FeedPage";
+import SavedPage from "@/components/SavedPage";
+const feedRoute = () => <FeedPage />;
+const savedRoute = () => <SavedPage />;
 
 
-const MyComponent = () => {
-  const [index, setIndex] = React.useState(0);
-  const [routes] = React.useState([
+const BottomBar = () => {
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
     {
-      key: "news",
-      title: "News",
+      key: "feed",
+      title: "Feed",
       focusedIcon: "newspaper-variant-multiple-outline",
       unfocusedIcon: "newspaper-variant-multiple",
     },
     {
-      key: "weather",
-      title: "weather",
-      focusedIcon: "weather-cloudy",
-      unfocusedIcon: "bell-outline",
+      key: "saved",
+      title: "Saved",
+      focusedIcon: "bookmark-multiple",
+      unfocusedIcon: "bookmark-multiple-outline",
     },
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
-    news: newsRoute,
-    weather: weatherRoute,
+    feed: feedRoute,
+    saved: savedRoute,
   });
 
   return (
@@ -37,4 +37,4 @@ const MyComponent = () => {
   );
 };
 
-export default MyComponent;
+export default BottomBar;
