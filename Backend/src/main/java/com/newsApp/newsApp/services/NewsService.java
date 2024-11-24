@@ -6,7 +6,6 @@ import com.newsApp.newsApp.repositories.NewsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +19,7 @@ public class NewsService {
         return newsRepository.findAll();
     }
 
-    public String saveArticle(SaveArticleRequest request) {
+    public boolean saveArticle(SaveArticleRequest request) {
         Optional<NewsModel> newsOptional = newsRepository.findByUserId(Integer.parseInt(request.getUserId()));
         if (newsOptional.isPresent()) {
             NewsModel news = newsOptional.get();
@@ -30,10 +29,25 @@ public class NewsService {
             article.setImageUrl(request.getImageUrl());
             news.getSaved().add(article);
             newsRepository.save(news);
-            return "Article saved successfully";
+            return true;
         } else {
-            return "User not found";
+            return false;
         }
+    }
+
+    public boolean deleteSavedArticle(int userId, String uuid) {
+        Optional<NewsModel> newsOptional = newsRepository.findByUserId(userId);
+        if (newsOptional.isPresent()) {
+            NewsModel news = newsOptional.get();
+            boolean removed = news.getSaved().removeIf(article ->
+                    article.getUuid() != null && article.getUuid().toString().equals(uuid)
+            );
+            if (removed) {
+                newsRepository.save(news);
+                return true;
+            }
+        }
+        return false;
     }
 
     public String updateCategories(UpdateCategoriesRequest request) {

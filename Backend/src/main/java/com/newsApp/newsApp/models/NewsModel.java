@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
+import java.util.UUID;
 
 @Document(collection = "News")
 public class NewsModel {
@@ -53,6 +54,7 @@ public class NewsModel {
         private String title;
         private String url;
         private String imageUrl;
+        private UUID uuid;
 
         public String getTitle() {
             return title;
@@ -76,6 +78,14 @@ public class NewsModel {
 
         public void setImageUrl(String imageUrl) {
             this.imageUrl = imageUrl;
+        }
+
+        public UUID getUuid() {
+            return uuid;
+        }
+
+        public void setUuid(UUID uuid) {
+            this.uuid = uuid;
         }
     }
 }

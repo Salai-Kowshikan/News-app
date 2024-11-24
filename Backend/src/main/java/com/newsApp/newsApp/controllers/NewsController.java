@@ -4,9 +4,12 @@ import com.newsApp.newsApp.dto.*;
 import com.newsApp.newsApp.models.NewsModel;
 import com.newsApp.newsApp.services.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/news")
@@ -36,8 +39,19 @@ public class NewsController {
     }
 
     @PostMapping("/savedArticle")
-    public String saveArticle(@RequestBody SaveArticleRequest request) {
-        return newsService.saveArticle(request);
+    public ResponseEntity<Map<String, Boolean>> saveArticle(@RequestBody SaveArticleRequest request) {
+        boolean isSaved = newsService.saveArticle(request);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("success", isSaved);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/savedArticle")
+    public ResponseEntity<Map<String, Boolean>> deleteSavedArticle(@RequestBody DeleteArticleRequest request) {
+        boolean isDeleted = newsService.deleteSavedArticle(request.getUserId(), request.getUuid());
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("success", isDeleted);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/updateCategories")

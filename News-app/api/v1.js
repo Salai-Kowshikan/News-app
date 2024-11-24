@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-const apiClient1 = axios.create({
-  baseURL: 'https://api.example.com/v1',
+const newsApi = axios.create({
+  baseURL: 'https://api.thenewsapi.com/v1',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-const apiClient2 = axios.create({
-  baseURL: 'https://api.anotherexample.com/v1',
+const db = axios.create({
+  baseURL: 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-export { apiClient1, apiClient2 };
+export { newsApi, db };
