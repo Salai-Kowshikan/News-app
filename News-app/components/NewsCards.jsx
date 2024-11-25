@@ -7,7 +7,7 @@ const NewsCards = ({ response, toggleSaved }) => {
       {response.map((res) => (
         <View key={res.uuid} style={styles.container}>
           <Card style={styles.card}>
-            <Card.Cover style={styles.cover} source={{ uri: res.image_url }} />
+            <Card.Cover style={styles.cover} source={{ uri: res.imageUrl }} />
             <Card.Title title={res.title} />
             <Card.Content>
               <Text>{res.description}</Text>

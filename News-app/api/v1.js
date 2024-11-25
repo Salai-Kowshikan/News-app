@@ -1,17 +1,10 @@
 import axios from 'axios';
 
-const newsApi = axios.create({
-  baseURL: 'https://api.thenewsapi.com/v1',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 const db = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'http://10.16.49.130:8080',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-export { newsApi, db };
+export { db };

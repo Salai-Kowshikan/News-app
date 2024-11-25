@@ -1,51 +1,23 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { Text, Chip, Button, FAB } from "react-native-paper";
+import { Text, Chip, FAB, Snackbar, Button } from "react-native-paper";
+import * as Notifications from 'expo-notifications';
+import * as Location from 'expo-location';
 import NewsCards from "@/components/NewsCards";
 import { FeedContext } from "@/context/FeedContext";
-import { newsApi, db } from "@/api/v1";
-import news from "@/constants/data";
+import { db } from "@/api/v1";
 
 const FeedPage = () => {
   const { feed, setFeed, saved, setSaved } = useContext(FeedContext);
-  // const key = process.env.EXPO_PUBLIC_API_KEY;
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [filteredFeed, setFilteredFeed] = useState([]);
-  // let page = 1
-
-  const fetchTop = async () => {
-    // try {
-    //   const response = await newsApi.get(`/news/top?api_token=${key}&locale=in`);
-    //   setFeed(response.data.data);
-    // } catch (e) {
-    //   console.log(e);
-    // }
-    const updatedNews = news.map((item) => ({
-      ...item,
-      saved: false,
-    }));
-    setFeed(updatedNews);
-  };
-
-  // const fetchMore = async () => {
-  //   page += 1;
-  //   try {
-  //     const categoriesParam = selectedCategories.length ? `&categories=${selectedCategories.join(",")}` : "";
-  //     const response = await newsApi.get(`/news/top?api_token=${key}&locale=in&page=${page}${categoriesParam}`);
-  //     setFeed((prevFeed) => [...prevFeed, ...response.data.data]);
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-
-  const fetchSaved = async () => {
-    try {
-      const response = await db.get("/news/savedArticle/1");
-      setSaved(response.data);
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [visibleFeed, setVisibleFeed] = useState([]);
+  const [page, setPage] = useState(1);
+  const [location, setLocation] = useState(null);
+  const [locationName, setLocationName] = useState("");
+  const scrollViewRef = useRef(null);
 
   const categories = [
     "science",
@@ -56,6 +28,7 @@ const FeedPage = () => {
     "politics",
     "food"
   ];
+
   const selectCategory = (category) => {
     let updatedCategories;
     if (selectedCategories.includes(category)) {
@@ -66,55 +39,127 @@ const FeedPage = () => {
     setSelectedCategories(updatedCategories);
   };
 
-  const toggleSaved = async (uuid) => {
-    const updatedFeed = feed.map((item) =>
-      item.uuid === uuid ? { ...item, saved: !item.saved } : item
-    );
-    setFeed(updatedFeed);
+  const fetchNews = async () => {
+    try {
+      const response = await db.get("/records");
+      const shuffledData = response.data.sort(() => Math.random() - 0.5);
+      setFeed(shuffledData);
+      setVisibleFeed(shuffledData.slice(0, 10));
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
+  const loadMore = () => {
+    const nextPage = page + 1;
+    const newVisibleFeed = filteredFeed.slice((nextPage - 1) * 10, nextPage * 10);
+    setVisibleFeed(newVisibleFeed);
+    setPage(nextPage);
+    scrollViewRef.current.scrollTo({ y: 0, animated: true });
+  };
+
+  const sendPushNotification = async (title) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Post Saved",
+        body: `${title} saved successfully`,
+      },
+      trigger: null,
+    });
+  };
+
+  const toggleSaved = async (uuid) => {
+    const updatedFeed = feed.map((item) => {
+      if (item.uuid === uuid) {
+        item.saved = !item.saved;
+      }
+      return item;
+    });
+    setFeed(updatedFeed);
+  
     const item = updatedFeed.find((item) => item.uuid === uuid);
     if (item.saved) {
       try {
-        await db.post("/news/savedArticle", {
-          userId: "1",
-          uuid: item.uuid,
-          title: item.title,
-          description: item.description,
-          url: item.url,
-          imageUrl: item.image_url,
-        });
-      } catch (e) {
-        console.log(e);
+        const response = await db.put(`/records/save/${uuid}`, {});
+        if (response.data.success) {
+          setSnackbarMessage("Saved successfully");
+          await sendPushNotification(item.title);
+        } else {
+          setSnackbarMessage("Failed to save");
+          item.saved = !item.saved;
+          setFeed([...updatedFeed]);
+        }
+      } catch (error) {
+        console.error(error);
+        setSnackbarMessage("Failed to save");
+        item.saved = !item.saved;
+        setFeed([...updatedFeed]);
       }
     } else {
       try {
-        await db.delete("/news/savedArticle", {
-          data: {
-            userId: "1",
-            uuid: item.uuid,
-          },
-        });
-      } catch (e) {
-        console.log(e);
+        const response = await db.put(`/records/unsave/${uuid}`, {});
+        if (response.data.success) {
+          setSnackbarMessage("Unsaved successfully");
+        } else {
+          setSnackbarMessage("Failed to unsave");
+          item.saved = !item.saved;
+          setFeed([...updatedFeed]);
+        }
+      } catch (error) {
+        console.error(error);
+        setSnackbarMessage("Failed to unsave");
+        item.saved = !item.saved; 
+        setFeed([...updatedFeed]);
       }
+    }
+    setSnackbarVisible(true);
+  };
+
+  const getLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      setSnackbarMessage('Permission to access location was denied');
+      setSnackbarVisible(true);
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    setLocation(location);
+
+    let reverseGeocode = await Location.reverseGeocodeAsync({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude
+    });
+
+    if (reverseGeocode.length > 0) {
+      const { city, region } = reverseGeocode[0];
+      setLocationName(`${city}, ${region}`);
     }
   };
 
   useEffect(() => {
+    getLocation();
+    fetchNews();
+  }, []);
+
+  useEffect(() => {
     if (selectedCategories.length === 0) {
       setFilteredFeed(feed);
+      setVisibleFeed(feed.slice(0, 10));
     } else {
       const filtered = feed.filter((item) =>
         item.categories.some((cat) => selectedCategories.includes(cat))
       );
       setFilteredFeed(filtered);
+      setVisibleFeed(filtered.slice(0, 10));
     }
+    setPage(1);
   }, [selectedCategories, feed]);
 
   useEffect(() => {
-    fetchTop();
-    fetchSaved();
-  }, []);
+    const savedItems = feed.filter(item => item.saved);
+    setSaved(savedItems);
+  }, [feed]);
 
   return (
     <>
@@ -132,13 +177,27 @@ const FeedPage = () => {
             </Chip>
           ))}
         </ScrollView>
-        <NewsCards response={filteredFeed} toggleSaved={toggleSaved} />
+        <Text variant="titleLarge">Here's the top news around {locationName}</Text>
+        <ScrollView ref={scrollViewRef}>
+          <NewsCards response={visibleFeed} toggleSaved={toggleSaved} />
+          {visibleFeed.length < filteredFeed.length && (
+            <Button onPress={loadMore}>Load More</Button>
+          )}
+        </ScrollView>
       </View>
       <FAB
         icon="reload"
         style={styles.fab}
-        onPress={() => console.log("Pressed")}
+        label="Load More"
+        onPress={loadMore}
       />
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </>
   );
 };
