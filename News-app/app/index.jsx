@@ -1,13 +1,20 @@
 import BottomBar from "@/components/BottomBar";
 import NavBar from "@/components/NavBar";
-import { useNotification } from "@/context/NotificationContext";
-import { useEffect } from "react";
-
+import Loader from "@/components/Loader";
+import { useEffect, useContext } from "react";
+import { FeedContext } from "@/context/FeedContext";
 export default function Index() {
-  const {expoPushToken, notification, error} = useNotification();
+  const { setLoading } = useContext(FeedContext);
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+  }, []);
 
   return (
     <>
+      <Loader />
       <NavBar />
       <BottomBar />
     </>
