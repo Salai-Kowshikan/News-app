@@ -177,8 +177,8 @@ const FeedPage = () => {
             </Chip>
           ))}
         </ScrollView>
-        <Text variant="titleLarge">Here's the top news around {locationName}</Text>
         <ScrollView ref={scrollViewRef}>
+        <Text variant="titleLarge" style={{marginVertical: 8}}>Here's the top news around {locationName}</Text>
           <NewsCards response={visibleFeed} toggleSaved={toggleSaved} />
           {visibleFeed.length < filteredFeed.length && (
             <Button onPress={loadMore}>Load More</Button>

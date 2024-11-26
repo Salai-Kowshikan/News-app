@@ -1,12 +1,11 @@
 import BottomBar from "@/components/BottomBar";
 import NavBar from "@/components/NavBar";
-import { registerForPushNotificationsAsync } from "@/api/notificationSetup";
+import { useNotification } from "@/context/NotificationContext";
 import { useEffect } from "react";
 
 export default function Index() {
-  useEffect(() => {
-    registerForPushNotificationsAsync();
-  },[])
+  const {expoPushToken, notification, error} = useNotification();
+
   return (
     <>
       <NavBar />
